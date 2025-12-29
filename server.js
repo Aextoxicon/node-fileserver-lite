@@ -25,6 +25,9 @@ function useDefaultConf() {
     port: 114514,
     allowedExts: ['.jpg', '.png', '.gif', '.webp', '.apk', '.zip', '.sh'],
   };
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true, mode: 0o755 });
+  }
 }
 
 const uploadDir = config.uploadDir;
