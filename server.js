@@ -3,27 +3,31 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
 const crypto = require('crypto');
+require('dotenv').config();
 
 const app = express();
-const PORT = 8000;
-
-//环境变量检查
-const requiredEnv = ['UP_DIR', 'API_TOKEN'];
-const missing = requiredEnv.filter(env => !process.env[env]);
-if (missing.length > 0) {
-  console.error(`环境变量缺失: ${missing.join(', ')}`);
+const configPath = path.join(__dirname, 'config.json');
+let config;
+try {
+  const configData = fs.readFileSync(configPath, 'utf-8');
+  config = JSON.parse(configData);
+} catch (err) {
+  console.error('加载配置文件失败:', err);
+  console.error('请检查 config.json 文件并确保格式正确');
   process.exit(1);
 }
 
-const uploadDir = process.env.UP_DIR;
-const apiToken = process.env.API_TOKEN;
+const uploadDir = config.uploadDir;
+const apiToken = config.apiToken;
+const PORT = config.port;
+const allowedExts = config.allowedExts;
 
 // 创建上传目录
 (async () => {
   try {
     await fs.access(uploadDir);
   } catch {
-    await fs.mkdir(uploadDir, { recursive: true, mode: 0o750 });
+    await fs.mkdir(uploadDir, { recursive: true, mode: 0o755 });
   }
 })();
 
@@ -121,11 +125,16 @@ app.get('/download/:filename', async (req, res) => {
     return res.status(400).json({ error: '非法文件名' });
   }
 
+  const resolvedPath = path.resolve(uploadDir, filename);
+  if (!resolvedPath.startsWith(path.resolve(uploadDir))) {
+    return res.status(400).json({ error: '非法文件路径' });
+  }
+
   const filePath = path.join(uploadDir, filename);
 
   try {
     await fs.access(filePath);
-    
+
     // Content-Type
     const ext = path.extname(filename).toLowerCase();
     const mimeTypes = {
