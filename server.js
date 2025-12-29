@@ -14,7 +14,17 @@ try {
 } catch (err) {
   console.error('加载配置文件失败:', err);
   console.error('请检查 config.json 文件并确保格式正确');
-  process.exit(1);
+  console.error('现在使用默认配置，上传目录为./uploads，密码Default_Pwd-123，端口114514');
+  useDefaultConf();
+}
+
+function useDefaultConf() {
+  config = {
+    uploadDir: './uploads',
+    apiToken: 'Default_Pwd-123',
+    port: 114514,
+    allowedExts: ['.jpg', '.png', '.gif', '.webp', '.apk', '.zip', '.sh'],
+  };
 }
 
 const uploadDir = config.uploadDir;
