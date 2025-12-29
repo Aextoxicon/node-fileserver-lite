@@ -72,7 +72,6 @@ const upload = multer({
     fileSize: 100 * 1024 * 1024, // 100MB
   },
   fileFilter: (req, file, cb) => {
-    const allowedExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.apk', '.zip', '.sh'];
     const ext = path.extname(file.originalname).toLowerCase();
     if (allowedExts.includes(ext)) {
       cb(null, true);
@@ -97,7 +96,7 @@ app.post('/upload', tokenAuthMiddleware, upload.single('file'), async (req, res)
       const baseName = path.basename(originalName, ext);
       const cleanBase = sanitizeFilename(baseName);
       //const dateStr = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19); // e.g. 2025-10-27T14-30-45
-      //safeName = `${cleanBase}_${dateStr}${ext}`;
+      //safeName = `${cleanBase}_${dateStr}${ext}`; //注释掉仅仅是为了方便做应用程序或者是压缩包下载站
       safeName = `${cleanBase}${ext}`;
     } else {
       const timestamp = Math.floor(Date.now() / 1000);
