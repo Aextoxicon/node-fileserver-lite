@@ -1,12 +1,11 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs').promises;
+const fs = require('fs');
 const crypto = require('crypto');
-require('dotenv').config();
 
 const app = express();
-const configPath = path.join(__dirname, 'config.json');
+const configPath = './config.json';
 let config;
 try {
   const configData = fs.readFileSync(configPath, 'utf-8');
@@ -19,15 +18,13 @@ try {
 }
 
 function useDefaultConf() {
-  config = {
-    uploadDir: './uploads',
-    apiToken: 'Default_Pwd-123',
-    port: 114514,
-    allowedExts: ['.jpg', '.png', '.gif', '.webp', '.apk', '.zip', '.sh'],
-  };
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true, mode: 0o755 });
-  }
+  const uploadDir = './uploads',
+    config = {
+      uploadDir,
+      apiToken: 'Default_Pwd-123',
+      port: 114514,
+      allowedExts: ['.jpg', '.png', '.gif', '.webp', '.apk', '.zip', '.sh'],
+    };
 }
 
 const uploadDir = config.uploadDir;
@@ -40,7 +37,11 @@ const allowedExts = config.allowedExts;
   try {
     await fs.access(uploadDir);
   } catch {
-    await fs.mkdir(uploadDir, { recursive: true, mode: 0o755 });
+    fs.mkdir(uploadDir, { recursive: true, mode: 0o755 }, (err) => {
+      if (err) {
+        console.error('创建上传目录失败:', err);
+      }
+    });
   }
 })();
 
