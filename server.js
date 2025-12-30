@@ -210,5 +210,5 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`服务运行在 http://localhost:${PORT}`);
-  console.log(`上传目录 (UP_DIR): ${uploadDir}`);
+  console.log(`上传目录: ${uploadDir}`);
 });
