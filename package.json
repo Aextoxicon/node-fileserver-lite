@@ -2,6 +2,7 @@
   "dependencies": {
     "crypto": "^1.0.1",
     "express": "^5.2.1",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "serve-index": "^1.9.1"
   }
 }

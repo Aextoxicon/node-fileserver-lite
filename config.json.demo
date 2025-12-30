@@ -1,0 +1,6 @@
+{
+  "uploadDir": "工作目录",
+  "apiToken": "API请求需要的token",
+  "port": 9178,
+  "allowedExts": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".apk", ".zip", ".sh"]
+}

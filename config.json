@@ -1,6 +1,0 @@
-{
-  "uploadDir": "~/upload",
-  "apiToken": "Pwd-123def",
-  "port": 8000,
-  "allowedExts": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".apk", ".zip", ".sh"]
-}

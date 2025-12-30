@@ -1,7 +1,9 @@
 const express = require('express');
+const serveIndex = require('serve-index');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const crypto = require('crypto');
 
 const app = express();
@@ -13,18 +15,19 @@ try {
 } catch (err) {
   console.error('加载配置文件失败:', err);
   console.error('请检查 config.json 文件并确保格式正确');
-  console.error('现在使用默认配置，上传目录为./uploads，密码Default_Pwd-123，端口114514');
+  console.error('现在使用默认配置，上传目录为./uploads，密码Default_Pwd-123，端口9178');
   useDefaultConf();
 }
 
 function useDefaultConf() {
-  const uploadDir = './uploads',
-    config = {
-      uploadDir,
-      apiToken: 'Default_Pwd-123',
-      port: 114514,
-      allowedExts: ['.jpg', '.png', '.gif', '.webp', '.apk', '.zip', '.sh'],
-    };
+  home = os.homedir()
+  let uploadDir = path.join(home, 'upload');
+  config = {
+    uploadDir: uploadDir,
+    apiToken: 'Default_Pwd-123',
+    port: 9178,
+    allowedExts: ['.jpg', '.png', '.gif', '.webp', '.apk', '.zip', '.sh'],
+  };
 }
 
 const uploadDir = config.uploadDir;
@@ -32,7 +35,7 @@ const apiToken = config.apiToken;
 const PORT = config.port;
 const allowedExts = config.allowedExts;
 
-// 创建上传目录
+// 检查上传目录，如果没有则创建
 (async () => {
   try {
     await fs.access(uploadDir);
@@ -44,6 +47,8 @@ const allowedExts = config.allowedExts;
     });
   }
 })();
+
+app.use('/index', serveIndex(uploadDir, { icons: true, view: 'details' }), express.static(uploadDir))
 
 // 工具
 function generateRandomString(bytes = 6) {
@@ -177,12 +182,12 @@ app.get('/download/:filename', async (req, res) => {
 // 列出文件
 app.get('/', async (req, res) => {
   try {
-    const entries = await fs.readdir(uploadDir, { withFileTypes: true });
+    const entries = fs.readdirSync(uploadDir, { withFileTypes: true });
     const files = [];
 
     for (const entry of entries) {
       if (entry.isFile()) {
-        const stat = await fs.stat(path.join(uploadDir, entry.name));
+        const stat = fs.statSync(path.join(uploadDir, entry.name));
         files.push({
           filename: entry.name,
           size: stat.size,
