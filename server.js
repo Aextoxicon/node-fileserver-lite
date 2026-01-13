@@ -48,7 +48,7 @@ const allowedExts = config.allowedExts;
   }
 })();
 
-app.use('/', serveIndex(uploadDir, { icons: true, view: 'details' }), express.static(uploadDir))
+app.use('/', serveIndex(uploadDir, { icons: true, view: 'details' }),
 
 // 工具
 function generateRandomString(bytes = 6) {
