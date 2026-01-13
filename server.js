@@ -48,7 +48,7 @@ const allowedExts = config.allowedExts;
   }
 })();
 
-app.use('/index', serveIndex(uploadDir, { icons: true, view: 'details' }), express.static(uploadDir))
+app.use('/', serveIndex(uploadDir, { icons: true, view: 'details' }), express.static(uploadDir))
 
 // 工具
 function generateRandomString(bytes = 6) {
@@ -180,7 +180,7 @@ app.get('/download/:filename', async (req, res) => {
 });
 
 // 列出文件
-app.get('/', async (req, res) => {
+app.get('/list', async (req, res) => {
   try {
     const entries = fs.readdirSync(uploadDir, { withFileTypes: true });
     const files = [];
