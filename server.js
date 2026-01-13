@@ -48,7 +48,7 @@ const allowedExts = config.allowedExts;
   }
 })();
 
-app.use('/', serveIndex(uploadDir, { icons: true, view: 'details' }),
+app.use('/', serveIndex(uploadDir, { icons: true, view: 'details' }))
 
 // 工具
 function generateRandomString(bytes = 6) {
@@ -135,7 +135,7 @@ app.post('/upload', tokenAuthMiddleware, upload.single('file'), async (req, res)
 });
 
 // 下载文件
-app.get('/download/:filename', async (req, res) => {
+app.get('/:filename', async (req, res) => {
   const filename = req.params.filename;
 
   // 严格校验文件名格式
