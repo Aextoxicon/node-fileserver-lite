@@ -41,7 +41,7 @@ const allowedExts = config.allowedExts;
   try {
     await fsp.access(uploadDir);
   } catch {
-    fsp.mkdir(uploadDir, { recursive: true, mode: 0o755 }, (err) => {
+    fsp.mkdirSync(uploadDir, { recursive: true, mode: 0o755 }, (err) => {
       if (err) {
         console.error('创建上传目录失败:', err);
       }
