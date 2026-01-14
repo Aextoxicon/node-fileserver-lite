@@ -48,8 +48,6 @@ const allowedExts = config.allowedExts;
   }
 })();
 
-app.use('/', serveIndex(uploadDir, { icons: true, view: 'details' }))
-
 // 工具
 function generateRandomString(bytes = 6) {
   return crypto.randomBytes(bytes).toString('hex');
@@ -126,7 +124,7 @@ app.post('/upload', tokenAuthMiddleware, upload.single('file'), async (req, res)
     const savePath = path.join(uploadDir, safeName);
     await fs.writeFile(savePath, req.file.buffer);
 
-    const url = `${req.protocol}://${req.get('host')}/uploads/${encodeURIComponent(safeName)}`;
+    const url = `${req.protocol}://${req.get('host')}/${encodeURIComponent(safeName)}`;
     res.json({ url });
   } catch (err) {
     console.error('保存文件失败:', err);
@@ -212,6 +210,8 @@ app.use((err, req, res, next) => {
   }
   next(err);
 });
+
+app.use('/', serveIndex(uploadDir, { icons: true, view: 'details' }))
 
 app.listen(PORT, () => {
   console.log(`服务运行在 http://localhost:${PORT}`);
