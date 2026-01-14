@@ -103,6 +103,10 @@ const upload = multer({
 app.post('/upload', tokenAuthMiddleware, upload.single('file'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: '未选择文件' });
+  } else {
+    res.status(202).json({ 
+    message: 'Upload accepted. Processing in background.',
+  });
   }
 
   try {
