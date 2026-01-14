@@ -105,25 +105,29 @@ app.post('/upload', tokenAuthMiddleware, upload.single('file'), async (req, res)
     return res.status(400).json({ error: '未选择文件' });
   }
 
+  res.status(202).json({
+    message: 'Upload accepted. Processing in background.',
+  });
+
   try {
-    const originalName = req.file.originalname;
-    const ext = path.extname(originalName).toLowerCase();
-    let safeName;
+    async function processFileUpload(file) {
+      const originalName = file.originalname;
+      const ext = path.extname(originalName).toLowerCase();
+      let safeName;
 
-    if (['.apk', '.zip'].includes(ext)) {
-      const baseName = path.basename(originalName, ext);
-      const cleanBase = sanitizeFilename(baseName);
-      //const dateStr = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19); // e.g. 2025-10-27T14-30-45
-      //safeName = `${cleanBase}_${dateStr}${ext}`; //注释掉仅仅是为了方便做应用程序或者是压缩包下载站
-      safeName = `${cleanBase}${ext}`;
-    } else {
-      const timestamp = Math.floor(Date.now() / 1000);
-      const randomStr = generateRandomString(6);
-      safeName = `${timestamp}_${randomStr}${ext}`;
+      if (['.apk', '.zip'].includes(ext)) {
+        const baseName = path.basename(originalName, ext);
+        const cleanBase = sanitizeFilename(baseName);
+        safeName = `${cleanBase}${ext}`;
+      } else {
+        const timestamp = Math.floor(Date.now() / 1000);
+        const randomStr = generateRandomString(6);
+        safeName = `${timestamp}_${randomStr}${ext}`;
+      }
+
+      const savePath = path.join(uploadDir, safeName);
+      await fsp.writeFile(savePath, file.buffer);
     }
-
-    const savePath = path.join(uploadDir, safeName);
-    await fsp.writeFile(savePath, req.file.buffer);
 
     const url = `${req.protocol}://${req.get('host')}/${encodeURIComponent(safeName)}`;
     res.json({ url });
