@@ -3,6 +3,7 @@ const serveIndex = require('serve-index');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const fsp = require('fs').promisms;
 const os = require('os');
 const crypto = require('crypto');
 
@@ -38,9 +39,9 @@ const allowedExts = config.allowedExts;
 // 检查上传目录，如果没有则创建
 (async () => {
   try {
-    await fs.access(uploadDir);
+    await fsp.access(uploadDir);
   } catch {
-    fs.mkdir(uploadDir, { recursive: true, mode: 0o755 }, (err) => {
+    fsp.mkdir(uploadDir, { recursive: true, mode: 0o755 }, (err) => {
       if (err) {
         console.error('创建上传目录失败:', err);
       }
@@ -122,7 +123,7 @@ app.post('/upload', tokenAuthMiddleware, upload.single('file'), async (req, res)
     }
 
     const savePath = path.join(uploadDir, safeName);
-    await fs.writeFile(savePath, req.file.buffer);
+    await fsp.writeFile(savePath, req.file.buffer);
 
     const url = `${req.protocol}://${req.get('host')}/${encodeURIComponent(safeName)}`;
     res.json({ url });
@@ -149,7 +150,7 @@ app.get('/:filename', async (req, res) => {
   const filePath = path.join(uploadDir, filename);
 
   try {
-    await fs.access(filePath);
+    await fsp.access(filePath);
 
     // Content-Type
     const ext = path.extname(filename).toLowerCase();
@@ -180,12 +181,12 @@ app.get('/:filename', async (req, res) => {
 // 列出文件
 app.get('/list', async (req, res) => {
   try {
-    const entries = fs.readdirSync(uploadDir, { withFileTypes: true });
+    const entries = fsp.readdirSync(uploadDir, { withFileTypes: true });
     const files = [];
 
     for (const entry of entries) {
       if (entry.isFile()) {
-        const stat = fs.statSync(path.join(uploadDir, entry.name));
+        const stat = fsp.statSync(path.join(uploadDir, entry.name));
         files.push({
           filename: entry.name,
           size: stat.size,
