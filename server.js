@@ -105,7 +105,6 @@ app.post('/upload', tokenAuthMiddleware, upload.single('file'), async (req, res)
     return res.status(400).json({ error: '未选择文件' });
   }
 
-  const url = `${req.protocol}://${req.get('host')}/${encodeURIComponent(req.file.filename)}`;
   res.status(202).json({
     message: 'Upload accepted. Processing in background.',
     url: url,
