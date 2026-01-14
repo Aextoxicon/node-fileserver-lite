@@ -85,9 +85,29 @@ function tokenAuthMiddleware(req, res, next) {
 
 // Multer
 const upload = multer({
-  storage: multer.diskStorage(),
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase();
+      let tempName;
+      
+      if (['.apk', '.zip'].includes(ext)) {
+        const baseName = path.basename(file.originalname, ext);
+        const cleanBase = sanitizeFilename(baseName);
+        tempName = `${cleanBase}${ext}`;
+      } else {
+        const timestamp = Math.floor(Date.now() / 1000);
+        const randomStr = generateRandomString(6);
+        tempName = `${timestamp}_${randomStr}${ext}`;
+      }
+      
+      cb(null, tempName);
+    }
+  }),
   limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB
+    fileSize: 300 * 1024 * 1024, // 300MB
   },
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
@@ -99,43 +119,16 @@ const upload = multer({
   },
 });
 
-// 上传文件
-app.post('/upload', tokenAuthMiddleware, upload.single('file'), async (req, res) => {
+app.post('/upload', tokenAuthMiddleware, upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: '未选择文件' });
   }
 
-  res.status(202).json({
+  res.status(202).json({ 
     message: 'Upload accepted. Processing in background.',
-    url: url,
   });
 
-  try {
-    async function processFileUpload(file) {
-      const originalName = file.originalname;
-      const ext = path.extname(originalName).toLowerCase();
-      let safeName;
-
-      if (['.apk', '.zip'].includes(ext)) {
-        const baseName = path.basename(originalName, ext);
-        const cleanBase = sanitizeFilename(baseName);
-        safeName = `${cleanBase}${ext}`;
-      } else {
-        const timestamp = Math.floor(Date.now() / 1000);
-        const randomStr = generateRandomString(6);
-        safeName = `${timestamp}_${randomStr}${ext}`;
-      }
-
-      const savePath = path.join(uploadDir, safeName);
-      await fsp.writeFile(savePath, file.buffer);
-    }
-
-    const url = `${req.protocol}://${req.get('host')}/${encodeURIComponent(safeName)}`;
-    res.json({ url });
-  } catch (err) {
-    console.error('保存文件失败:', err);
-    res.status(500).json({ error: '保存文件失败' });
-  }
+  console.log('文件上传完成:', req.file.filename);
 });
 
 // 下载文件
