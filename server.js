@@ -124,8 +124,8 @@ app.post('/upload', tokenAuthMiddleware, upload.single('file'), (req, res) => {
     return res.status(400).json({ error: '未选择文件' });
   }
 
-  res.status(202).json({ 
-    message: 'Upload accepted. Processing in background.',
+  res.status(200).json({ 
+    message: 'Upload success',
   });
 
   console.log('文件上传完成:', req.file.filename);
