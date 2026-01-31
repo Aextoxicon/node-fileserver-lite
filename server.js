@@ -21,8 +21,8 @@ try {
 }
 
 function useDefaultConf() {
-  home = os.homedir()
-  let uploadDir = path.join(home, 'upload');
+  const home = os.homedir();
+  const uploadDir = path.join(home, 'upload');
   config = {
     uploadDir: uploadDir,
     apiToken: 'Default_Pwd-123',
@@ -36,34 +36,36 @@ const apiToken = config.apiToken;
 const PORT = config.port;
 const allowedExts = config.allowedExts;
 
-// 检查上传目录，如果没有则创建
 (async () => {
   try {
     await fsp.access(uploadDir);
   } catch {
-    fsp.mkdir(uploadDir, { recursive: true, mode: 0o755 }, (err) => {
-      if (err) {
-        console.error('创建上传目录失败:', err);
-      }
-    });
+    try {
+      await fsp.mkdir(uploadDir, { recursive: true });
+      console.log(`创建上传目录: ${uploadDir}`);
+    } catch (err) {
+      console.error('创建上传目录失败:', err);
+      const fallbackDir = path.join(__dirname, 'uploads');
+      await fsp.mkdir(fallbackDir, { recursive: true });
+      console.log(`使用回退目录: ${fallbackDir}`);
+      config.uploadDir = fallbackDir;
+    }
   }
 })();
 
-// 工具
 function generateRandomString(bytes = 6) {
   return crypto.randomBytes(bytes).toString('hex');
 }
 
 function sanitizeFilename(name) {
   return name
-    .replace(/[/\\?%*:|"<>]/g, '_') // 替换危险字符
-    .replace(/\s+/g, '_')           // 空格转下划线
-    .replace(/_{2,}/g, '_')         // 合并多个下划线
+    .replace(/[<>:"/\\|?*]/g, '_')
+    .replace(/\s+/g, '_')
+    .replace(/_{2,}/g, '_')
     .trim()
-    .substring(0, 200); // 限制长度
+    .substring(0, 200);
 }
 
-// Token
 function tokenAuthMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
@@ -83,7 +85,6 @@ function tokenAuthMiddleware(req, res, next) {
   next();
 }
 
-// Multer
 const upload = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
@@ -126,16 +127,15 @@ app.post('/upload', tokenAuthMiddleware, upload.single('file'), (req, res) => {
 
   res.status(200).json({ 
     message: 'Upload success',
+    filename: req.file.filename
   });
 
   console.log('文件上传完成:', req.file.filename);
 });
 
-// 下载文件
 app.get('/:filename', async (req, res) => {
   const filename = req.params.filename;
 
-  // 严格校验文件名格式
   if (!/^[a-zA-Z0-9._@\-]+$/.test(filename)) {
     return res.status(400).json({ error: '非法文件名' });
   }
@@ -150,7 +150,6 @@ app.get('/:filename', async (req, res) => {
   try {
     await fsp.access(filePath);
 
-    // Content-Type
     const ext = path.extname(filename).toLowerCase();
     const mimeTypes = {
       '.jpg': 'image/jpeg',
@@ -176,15 +175,15 @@ app.get('/:filename', async (req, res) => {
   }
 });
 
-// 列出文件
 app.get('/list', async (req, res) => {
   try {
-    const entries = fsp.readdirSync(uploadDir, { withFileTypes: true });
+    const entries = await fsp.readdir(uploadDir, { withFileTypes: true });
     const files = [];
 
     for (const entry of entries) {
       if (entry.isFile()) {
-        const stat = fsp.statSync(path.join(uploadDir, entry.name));
+        const filePath = path.join(uploadDir, entry.name);
+        const stat = await fsp.stat(filePath);
         files.push({
           filename: entry.name,
           size: stat.size,
@@ -199,7 +198,6 @@ app.get('/list', async (req, res) => {
   }
 });
 
-// Multer 错误处理
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
@@ -215,4 +213,5 @@ app.use('/', serveIndex(uploadDir, { icons: true, view: 'details' }))
 app.listen(PORT, () => {
   console.log(`服务运行在 http://localhost:${PORT}`);
   console.log(`上传目录: ${uploadDir}`);
+  console.log(`API令牌: ${apiToken}`);
 });
